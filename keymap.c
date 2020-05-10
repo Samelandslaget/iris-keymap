@@ -9,6 +9,8 @@ extern keymap_config_t keymap_config;
 
 bool is_alt_tab_active = false;
 uint16_t alt_tab_timer = 0;
+bool is_ctl_tab_active = false;
+uint16_t ctl_tab_timer = 0;
 
 enum custom_keycodes {
 	QWERTY = SAFE_RANGE,
@@ -16,13 +18,14 @@ enum custom_keycodes {
 	RAISE,
 	ADJUST,
 	ALT_TAB,
+	CTL_TAB,
 };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 	[_QWERTY] = LAYOUT(
 			//┌────────┬────────┬────────┬────────┬────────┬────────┐                          ┌────────┬────────┬────────┬────────┬────────┬────────┐
-			   KC_INS,  KC_LALT, KC_RALT, KC_LSFT, KC_LCTL, KC_DEL,                             KC_DEL,  ALT_TAB, KC_LALT, KC_RALT, KC_LSFT, KC_PAUS,
+			   KC_INS,  KC_LSFT, KC_RALT, KC_LALT, CTL_TAB, KC_DEL,                             KC_DEL,  ALT_TAB, KC_LALT, KC_RALT, KC_LSFT, KC_PAUS,
 			//├────────┼────────┼────────┼────────┼────────┼────────┤                          ├────────┼────────┼────────┼────────┼────────┼────────┤
 			   KC_TAB,  KC_Q,    KC_W,    KC_F,    KC_P,    KC_B,                               KC_J,    KC_L,    KC_U,    KC_Y,    KC_SCLN, KC_QUOT,
 			//├────────┼────────┼────────┼────────┼────────┼────────┤                          ├────────┼────────┼────────┼────────┼────────┼────────┤
@@ -68,9 +71,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 			//├────────┼────────┼────────┼────────┼────────┼────────┤                          ├────────┼────────┼────────┼────────┼────────┼────────┤
 			   _______, _______, KC_MPRV, KC_VOLD, KC_MNXT, _______,                            _______, _______, RGB_M_P, RGB_M_X, RGB_M_T, RGB_TOG, // Plain, Xmas, Test rgb
 			//├────────┼────────┼────────┼────────┼────────┼────────┤                          ├────────┼────────┼────────┼────────┼────────┼────────┤
-			   _______, _______, _______, _______, _______, _______,                            _______, _______, RGB_HUI, RGB_SAI, RGB_VAI, RGB_MOD,
+			   _______, _______, _______, KC_MS_U, _______, KC_WH_U,                            KC_BTN3, KC_BTN1, RGB_HUI, RGB_SAI, RGB_VAI, RGB_MOD,
 			//├────────┼────────┼────────┼────────┼────────┼────────┼────────┐        ┌────────┼────────┼────────┼────────┼────────┼────────┼────────┤
-			   _______, _______, _______, _______, _______, _______, _______,          _______, _______, _______, RGB_HUD, RGB_SAD, RGB_VAD, _______,
+			   _______, _______, KC_MS_L, KC_MS_D, KC_MS_R, KC_WH_D, _______,          _______, _______, KC_BTN2, RGB_HUD, RGB_SAD, RGB_VAD, _______,
 			//└────────┴────────┴────────┴───┬────┴───┬────┴───┬────┴───┬────┘        └───┬────┴───┬────┴───┬────┴───┬────┴────────┴────────┴────────┘
 			   								  _______, _______, _______,                   _______, _______, _______
 										  // └────────┴────────┴────────┘                 └────────┴────────┴────────┘
@@ -127,6 +130,18 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 				unregister_code(KC_TAB);
 			}
 			break;
+		case CTL_TAB:
+			if (record->event.pressed) {
+				if (!is_ctl_tab_active) {
+					is_ctl_tab_active = true;
+					register_code(KC_LCTL);
+				}
+				ctl_tab_timer = timer_read();
+				register_code(KC_TAB);
+			} else {
+				unregister_code(KC_TAB);
+			}
+			break;
 	}
 	return true;
 }
@@ -153,6 +168,12 @@ void matrix_scan_user(void) {
 		if (timer_elapsed(alt_tab_timer) > 200) {
 			unregister_code(KC_LALT);
 			is_alt_tab_active = false;
+		}
+	}
+	else if (is_ctl_tab_active) {
+		if (timer_elapsed(ctl_tab_timer) > 200) {
+			unregister_code(KC_LCTL);
+			is_ctl_tab_active = false;
 		}
 	}
 }
