@@ -121,8 +121,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 				if (!is_alt_tab_active) {
 					is_alt_tab_active = true;
 					register_code(KC_LALT);
-					register_code(KC_RALT);
-					unregister_code(KC_RALT);
 				}
 				alt_tab_timer = timer_read();
 				register_code(KC_TAB);
